@@ -11,12 +11,12 @@
 #define USER_NAME_OFFSET		13
 #define USER_CHECKSUM_OFFSET	30
 
-static void SetUsersNumber(uint8_t users_number);
-static void SetAdminsNumber(uint8_t admins_number);
+static uint8_t SetUsersNumber(uint8_t users_number);
+static uint8_t SetAdminsNumber(uint8_t admins_number);
 static uint8_t GetUsersNumber(void);
 static uint8_t GetAdminsNumber(void);
 static void FactoryReset(void);
-static uint8_t SystemDataSort(void);
+static void SystemDataSort(void);
 static uint8_t RelocateUser(uint16_t source, uint16_t destination);
 static uint16_t CheckUserID(uint8_t * user_id);
 
@@ -28,6 +28,7 @@ uint8_t g_admins_number = 0;
 
 extern void E2prom_SystemSetup(void)
 {
+
 	if(E2prom_GetSystemFactorySetting() != FACTORY_CONFIGURED)
 	{
 		//clear memory to make sure everything will be good
@@ -50,27 +51,29 @@ extern void E2prom_SystemSetup(void)
 
 extern uint8_t E2prom_AddUser(uint8_t * user_id, uint8_t * user_name, uint8_t * user_pw, Rank user_rank)
 {
-
+	uint8_t users_number = GetUsersNumber();
+	uint8_t admins_number = GetAdminsNumber();
 	//check for duplicated user ids'
-	if(CheckUserID(user_id) != 0)
+	if(CheckUserID(user_id) != NOT_FOUND)
+	{
+		return FAIL;	//id already exists
+	}
+	else if (users_number >= MAX_NUMBER_OF_USERS)
 	{
 		return FAIL;
 	}
-	else {;}
-
-	if((user_rank == admin) && g_admins_number >= 2)
+	else if((user_rank == admin) && (admins_number >= MAX_NUMBER_OF_ADMINS))
 	{
-        return FAIL;
+    return FAIL;
 	}
-	else{;}
-
-	uint8_t users_number = GetUsersNumber();
+	else
+		{;}
 
 	uint16_t target_address = 0x020 + (users_number * 0x20);
 	uint8_t i= 0, j=0;
 	//transmit : status, rank, id, pw, name : calculate checksum, transmit checksum
 	uint16_t checksum = 0;
-	checksum += ACTIVE + user_rank;
+	checksum += (ACTIVE + user_rank);
 	I2C_StartTransmit(target_address + USER_STATUS_OFFSET);
 	I2C_Transmit(ACTIVE);
 	I2C_Transmit(user_rank);
@@ -122,17 +125,20 @@ extern uint8_t E2prom_AddUser(uint8_t * user_id, uint8_t * user_name, uint8_t * 
 		I2C_StartTransmit(target_address);
 		I2C_Transmit(VALID);
 		I2C_StopTransmit();
-		g_users_number++;
-		I2C_StartTransmit(USERS_ADDRESS);
-		I2C_Transmit(g_users_number);
-		I2C_StopTransmit();
+
+		users_number++;
+
 		if(user_rank == admin)
 		{
-			g_admins_number++;
-			I2C_StartTransmit(ADMINS_ADDRESS);
-			I2C_Transmit(g_admins_number);
-			I2C_StopTransmit();
+			admins_number++;
 		}
+		else
+			{;}
+
+		SetUsersNumber(users_number);
+		SetAdminsNumber(admins_number);
+
+
 		return SUCCESS;
 	}
 	else
@@ -142,7 +148,7 @@ extern uint8_t E2prom_AddUser(uint8_t * user_id, uint8_t * user_name, uint8_t * 
 	}
 }
 
-extern uint8_t E2prom_RemoveUser(uint8_t * user_id, uint8_t * loggedIn_id)
+extern uint8_t E2prom_RemoveUser(uint8_t * user_id, uint8_t * loggedIn_id)		//needs attention
 {
 	if(strcmp(user_id, loggedIn_id) == 0)
 	{
@@ -168,7 +174,7 @@ extern uint8_t E2prom_RemoveUser(uint8_t * user_id, uint8_t * loggedIn_id)
 	return SUCCESS;
 }
 
-extern uint8_t E2prom_ModifyUser(uint8_t * user_id, uint8_t * user_name, uint8_t * user_pw)
+extern uint8_t E2prom_ModifyUser(uint8_t * user_id, uint8_t * user_name, uint8_t * user_pw)		//needs attention
 {
 	uint16_t target_address = CheckUserID(user_id);
 	if(target_address == 0)
@@ -252,22 +258,22 @@ extern uint8_t E2prom_ModifyUser(uint8_t * user_id, uint8_t * user_name, uint8_t
 	}
 }
 
-extern void E2prom_ListUsers(void)
+extern void E2prom_ListUsers(void)		//Check
 {
+
+	uint8_t users_number = GetUsersNumber();
+
 	uint8_t i = 0, j = 0, user_iterator = 1;
 	uint8_t user_name[17];
 	uint8_t user_id[5];
 	Rank user_rank;
-	for(i=1; i<=g_users_number; i++)
+	for(i=1; i<=users_number; i++)
 	{
 		I2C_StartReceive(i*(0x020) + USER_STATE_OFFSET);
 		uint8_t user_state = I2C_ReceiveAck();
 		I2C_StopReceive();
-		if(user_state != VALID)
-		{
-			continue;
-		}
-		else
+
+		if(user_state == VALID)
 		{
 			I2C_StartReceive(i*0x020 + USER_RANK_OFFSET);
 			user_rank = (Rank)I2C_ReceiveAck();
@@ -292,6 +298,7 @@ extern void E2prom_ListUsers(void)
 					{;}
 			}
 			I2C_StopReceive();
+
 			if(user_iterator <= 9)
 			{
 				UART_SendChar(user_iterator + 0x30);
@@ -301,6 +308,7 @@ extern void E2prom_ListUsers(void)
 				UART_SendChar(user_iterator / 10);
 				UART_SendChar(user_iterator % 10);
 			}
+
 			else if(user_iterator > 99 && user_iterator <= 255)
 			{
 				UART_SendChar(user_iterator / 100);
@@ -309,6 +317,7 @@ extern void E2prom_ListUsers(void)
 			}
 			else
 				{;}
+
 
 			UART_SendString(". ");
 			UART_SendString(user_name);
@@ -337,7 +346,7 @@ extern void E2prom_ListUsers(void)
 	}
 }
 
-extern Rank E2prom_VerifyAdminInfo(uint8_t * user_id, uint8_t* user_pw)
+extern Rank E2prom_VerifyAdminInfo(uint8_t * user_id, uint8_t* user_pw)		//needs attention
 {
 	uint16_t user_address = CheckUserID(user_id);
 	Rank user_rank;
@@ -385,7 +394,7 @@ extern Rank E2prom_VerifyAdminInfo(uint8_t * user_id, uint8_t* user_pw)
 	}
 }
 
-extern uint8_t* E2prom_VerifyUserInfo(uint8_t * user_id, uint8_t * user_pw)
+extern uint8_t* E2prom_VerifyUserInfo(uint8_t * user_id, uint8_t * user_pw)		//needs attention
 {
 	uint16_t user_address = CheckUserID(user_id);
 	if(user_address == 0)
@@ -502,7 +511,7 @@ extern uint8_t E2prom_GetUserRank(uint8_t * user_id, Rank * user_rank)
 	}
 }
 
-extern uint8_t E2prom_GetSystemFactorySetting(void)
+extern uint8_t E2prom_GetSystemFactorySetting(void)			//check
 {
 	uint8_t sys_factory_setting = 0;
 
@@ -517,37 +526,72 @@ extern uint8_t E2prom_GetSystemFactorySetting(void)
 
 /********************** Setters *************************/
 
-extern void E2prom_SetSystemFactorySetting(uint8_t setting)
+extern uint8_t E2prom_SetSystemFactorySetting(uint8_t setting)		//check
 {
-	I2C_StartTransmit(FACTORY_SETTING_ADDRESS);
-	I2C_Transmit(setting);
-	I2C_StopTransmit();
+	if(setting == FACTORY_FIRST_TIME_USE || setting == FACTORY_CONFIGURED)
+	{
+		I2C_StartTransmit(FACTORY_SETTING_ADDRESS);
+		I2C_Transmit(setting);
+		I2C_StopTransmit();
+		return SUCCESS;
+	}
+	else
+	{
+		return FAIL;
+	}
+
 }
 
-extern void SetSystemState(uint8_t system_state)
+extern uint8_t SetSystemState(uint8_t system_state)		//check
 {
-	I2C_StartTransmit(SYSTEM_STATE_ADDRESS);
-	I2C_Transmit(system_state);
-	I2C_StopTransmit();
+	if(system_state == UNLOCKED || system_state == LOCKED)
+	{
+		I2C_StartTransmit(SYSTEM_STATE_ADDRESS);
+		I2C_Transmit(system_state);
+		I2C_StopTransmit();
+
+		return SUCCESS;
+	}
+	else
+	{
+		return FAIL;
+	}
+
 }
 
 /******************* Static Utils **********************/
 
-static void SetUsersNumber(uint8_t users_number)
+static uint8_t SetUsersNumber(uint8_t users_number)		//check
 {
-	I2C_StartTransmit(USERS_ADDRESS);
-	I2C_Transmit(users_number);
-	I2C_StopTransmit();
+	if(users_number <= 126)
+	{
+		I2C_StartTransmit(USERS_ADDRESS);
+		I2C_Transmit(users_number);
+		I2C_StopTransmit();
+		return SUCCESS;
+	}
+	else
+	{
+		return FAIL;
+	}
 }
 
-static void SetAdminsNumber(uint8_t admins_number)
+static uint8_t SetAdminsNumber(uint8_t admins_number)		//check
 {
-	I2C_StartTransmit(ADMINS_ADDRESS);
-	I2C_Transmit(admins_number);
-	I2C_StopTransmit();
+	if(admins_number <= MAX_NUMBER_OF_ADMINS)
+	{
+		I2C_StartTransmit(ADMINS_ADDRESS);
+		I2C_Transmit(admins_number);
+		I2C_StopTransmit();
+		return SUCCESS;
+	}
+	else
+	{
+		return FAIL;
+	}
 }
 
-static uint8_t GetUsersNumber(void)
+static uint8_t GetUsersNumber(void)		//check
 {
 	uint8_t users_number = 0;
 	I2C_StartReceive(USERS_ADDRESS);
@@ -557,7 +601,7 @@ static uint8_t GetUsersNumber(void)
 	return users_number;
 }
 
-static uint8_t GetAdminsNumber(void)
+static uint8_t GetAdminsNumber(void)		//check
 {
 	uint8_t admins_number = 0;
 	I2C_StartReceive(ADMINS_ADDRESS);
@@ -567,7 +611,7 @@ static uint8_t GetAdminsNumber(void)
 	return admins_number;
 }
 
-static void FactoryReset(void)
+static void FactoryReset(void)		//check
 {
   uint16_t i=0;
   uint8_t j =0;
@@ -583,15 +627,16 @@ static void FactoryReset(void)
   }
 }
 
-extern uint16_t CheckUserID(uint8_t * user_id)
+extern uint16_t CheckUserID(uint8_t * user_id)		//check
 {
 
+	uint8_t users_number = GetUsersNumber();
 
 	uint8_t i = 0, j = 0, id_cmp[5];
 
-	for(i=1; i<= g_users_number; i++)
+	for(i=1; i<= users_number; i++)
 	{
-		I2C_StartReceive(i*0x020 + 3);
+		I2C_StartReceive(i*0x020 + USER_ID_OFFSET);
 		for(j=0; j<5; j++)
 		{
 			id_cmp[j] = I2C_ReceiveAck();
@@ -599,7 +644,7 @@ extern uint16_t CheckUserID(uint8_t * user_id)
 		I2C_StopReceive();
 		if(strcmp(user_id, id_cmp) == 0)
 		{
-			return (i*0x20); //id exists
+			return (i*0x20); //id exists and returns the address of the user
 		}
 	}
 
@@ -607,36 +652,33 @@ extern uint16_t CheckUserID(uint8_t * user_id)
 
 }
 
-static uint8_t SystemDataSort(void)
+static void SystemDataSort(void)		//check
 {
 	//read number of users in global variable
-	I2C_StartReceive(USERS_ADDRESS);
-	g_users_number = I2C_ReceiveAck();
-	I2C_StopReceive();
-	g_admins_number = 0;
-
+	uint8_t users_number = GetUsersNumber();
+	uint8_t admins_number = 0;
 	//loop for number of users
 	uint8_t i = 0, j = 0, user_state;
-	for(i=1; i<=g_users_number; i++)
+	for(i=1; i<=users_number; i++)
 	{
 		I2C_StartReceive(i*0x020);
 		user_state = I2C_ReceiveAck();
 		I2C_StopReceive();
 		if(user_state != VALID)
 		{
-			for(j=g_users_number; j>=i; j--)
+			for(j=users_number; j>=i; j--)
 			{
 				I2C_StartReceive(j*0x020);
 				user_state = I2C_ReceiveAck();
 				I2C_StopReceive();
 				if(user_state != VALID)
 				{
-					g_users_number--;
+					users_number--;
 				}
 				else
 				{
 					RelocateUser(j*0x020, i*0x020);
-					g_users_number--;
+					users_number--;
 					I2C_StartTransmit(j*0x020);
 					I2C_Transmit(EMPTY);
 					I2C_StopTransmit();
@@ -644,27 +686,29 @@ static uint8_t SystemDataSort(void)
 				}
 			}
 		}
+		else
+		{;}
+
 		if(user_state == VALID)
 		{
-			I2C_StartReceive(i*0x020 + 2);
+			I2C_StartReceive(i*0x020 + USER_RANK_OFFSET);
 			if(I2C_ReceiveAck() == admin)
 			{
-				g_admins_number++;
+				admins_number++;
 			}
 			I2C_StopReceive();
 		}
+		else
+			{;}
 
-		return SUCCESS;
 	}
 
-	I2C_StartTransmit(USERS_ADDRESS);
-	I2C_Transmit(g_users_number);
-	I2C_Transmit(g_admins_number);
-	I2C_StopTransmit();
+	SetUsersNumber(users_number);
+	SetAdminsNumber(admins_number);
 
 }
 
-static uint8_t RelocateUser(uint16_t source, uint16_t destination)
+static uint8_t RelocateUser(uint16_t source, uint16_t destination)		//check
 {
 	uint8_t user_data[31], i=0;
 	I2C_StartReceive(source + 1);
