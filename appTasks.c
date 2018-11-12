@@ -26,7 +26,6 @@ extern TaskHandle_t terminalHandle;
 
 void vTask_Keypad(void * args)
 {
-	vTaskSuspend(NULL);
 
 	uint8_t KeypadLastState = NOTPRESSED;
 	uint8_t KeypadKey = 0;
@@ -63,7 +62,6 @@ void vTask_LCD(void * args)
 	}
 
 	vTaskResume(terminalHandle);
-	vTaskDelay(10/portTICK_PERIOD_MS);
 
 	uint8_t KeypadKey = 0;
 	uint8_t passwordIndex = 0;
@@ -240,9 +238,11 @@ void vTask_LCD(void * args)
 
 void vTask_Terminal(void * args)
 {
-	//Suspend the terminal task until the lcd initializes and cheks for factory settings
+	//Suspend the terminal task until the lcd initializes and checks for factory settings
 	vTaskSuspend(NULL);
+	//wait until task resume from lcd task and then suspend lcd task
 	vTaskSuspend(lcdHandle);
+	vTaskSuspend(keypadHandle);
 
 
 	Terminal_State_t Terminal_CurrentState = Idle;
@@ -294,7 +294,7 @@ void vTask_Terminal(void * args)
 			UART_SendString("\r\nPlease change admin login info to continue initialization");
 			do
 			{
-				UART_SendString("\r\nEnter Admin user name: ")
+				UART_SendString("\r\nEnter Admin user name: ");
 			}while(Terminal_ReceiveUserName(user_name) == CANCELLED);
 
 			do

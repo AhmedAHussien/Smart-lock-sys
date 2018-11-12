@@ -1,4 +1,4 @@
-"D:\embedded sys\Workspaces\ARM Cortex M-4\RTOS\terminal.c"
+"C:\Users\aidsg\Desktop\Smart-lock-sys\terminal.c"
 -std=c99
 -ferror-limit=100
 -I

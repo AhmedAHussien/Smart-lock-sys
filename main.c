@@ -9,7 +9,7 @@
 #include "i2c.h"
 #include "appTasks.h"
 
-#define DEBUG
+
 
 #ifdef DEBUG
 static void UpdateArray(uint8_t * ptr);
@@ -35,8 +35,8 @@ TaskHandle_t terminalHandle = NULL;
 
 int main()
 {
-  
-  
+
+
    unsigned long int i = 0;
   for(i=0; i<20000000; i++);            //delay
 
@@ -45,11 +45,11 @@ int main()
   GPIOF->DEN |= (1U<<4) | (1U<<3) | (1U<<2);
   GPIOF->DIR |= (1U<<4) | (1U<<3) | (1U<<2);
   GPIOF->DATA_BITS[1U<<4 | (1U<<3) | (1U<<2)] = (1U<<4) | (1U<<3) | (1U<<2);
-  
+
   SYSCTL->RCGCGPIO |= (1U<<0);
   GPIOA->DEN |= (1U<<5);
   GPIOA->DIR |= (1U<<5);
-  
+
   SYSCTL->RCGCGPIO |= (1U<<5);
   GPIOF->DEN |= (1U<<4);
   GPIOF->DIR |= (1U<<4);
@@ -59,21 +59,21 @@ int main()
 
   I2C_Init();                    //initialize i2c
   UART_Init();
-  
 
-  
+
+
 #ifdef DEBUG
   if(E2prom_SystemSetup() == FAIL)
   {
     while(1);
   }
 
- 
+
   uint8_t arr[2001] = {0};
-  
+
   UpdateArray(arr);
   arr[2000]++;
-  
+
   E2prom_AddUser("1210", "Ahmed hessein", "1276", admin);
   UpdateArray(arr);
   arr[2000]++;
@@ -91,7 +91,7 @@ int main()
   arr[2000]++;
   E2prom_AddUser("7899", "Joe", "1000", member);
   UpdateArray(arr);
-  arr[2000]++; 
+  arr[2000]++;
   E2prom_RemoveUser("1510", "1510");
   UpdateArray(arr);
   arr[2000]++;
@@ -107,29 +107,27 @@ int main()
   E2prom_ModifyUser("5030", "Abdelrhman", "5060");
   UpdateArray(arr);
   arr[2000]++;
-  
+
 #endif
   //system start up function
-  
-  
-  
-  
+
+
   LCD_Queue = xQueueCreate(2, sizeof(uint8_t));
-  Terminal_Queue = xQueueCreate(3, sizeof(uint8_t));
+  Terminal_Queue = xQueueCreate(5, sizeof(uint8_t));
   UartSemaphore = xSemaphoreCreateBinary();
 
   xTaskCreate(vTask_LCD, "LCD", 250, NULL, 3, &lcdHandle);
   xTaskCreate(vTask_Keypad, "Keypad", 250, NULL, 2, &keypadHandle);
-  xTaskCreate(vTask_Terminal, "Terminal", 250, NULL, 3, NULL);
+  xTaskCreate(vTask_Terminal, "Terminal", 250, NULL, 3, &terminalHandle);
 
   #ifdef DEBUG_GPIO
   GPIOA->DATA_BITS[(1U<<5)] = (1U<<5);
   #endif
-  
+
   vTaskStartScheduler();
-  
+
   for(;;);
-  
+
   return 0;
 }
 
@@ -170,11 +168,11 @@ void vTaskSwitch(void * args)
       else
         UART_SendString("Could not send to the queue\r\n");
     }  else ;
-   
+
     if(GPIOF->DATA_BITS[SW2] & SW2)
       switchFlag = 0;    else ;
-    
-    vTaskDelayUntil(&xLastWakeTime, 50/portTICK_PERIOD_MS); 
+
+    vTaskDelayUntil(&xLastWakeTime, 50/portTICK_PERIOD_MS);
   }
 }
 
@@ -190,7 +188,7 @@ void vTaskLED(void * args)
     receivedState = xQueueReceive(myQueue, &receivedColor, 0);
     if(receivedState == pdPASS)
       GPIOF->DATA_BITS[(0x07 << 1U)] &=~ (0x07 << 1U);  else ;
-      
+
       GPIOF->DATA_BITS[(0x07 << 1U)] |= (receivedColor << 1U);
       vTaskDelayUntil(&xLastWakeTime, (500/portTICK_PERIOD_MS));
       GPIOF->DATA_BITS[(0x07 << 1U)] &=~ (receivedColor << 1U);

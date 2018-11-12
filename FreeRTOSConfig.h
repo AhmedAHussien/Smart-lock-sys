@@ -16,7 +16,8 @@
 #define INCLUDE_vTaskDelay                      1
 #define INCLUDE_vTaskDelayUntil                 1
 #define INCLUDE_vTaskSuspend                    1
-#define INCLUE_vTaskResume                      1
+#define INCLUDE_vTaskResume                     1
+
 /* The highest interrupt priority that can be used by any interrupt service routine that makes calls to interrupt safe FreeRTOS API functions.  DO NOT CALL INTERRUPT SAFE FREERTOS API FUNCTIONS FROM ANY INTERRUPT THAT HAS A HIGHER PRIORITY THAN THIS! (higher priorities are lower numeric values. */
 #define configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY    10
 /* Interrupt priorities used by the kernel port layer itself.  These are generic
