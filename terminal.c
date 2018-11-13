@@ -20,7 +20,6 @@ extern uint8_t Terminal_ReceiveUserID(uint8_t * user_id)
 				if(i == 4)
 				{
 					user_id[i] = '\0';
-					UART_SendString("\r\n");
 				}
 				else
 					{;}
@@ -75,7 +74,6 @@ extern uint8_t Terminal_ReceiveUserPassword(uint8_t * user_password)
 				if(i == 4)
 				{
 					user_password[i] = '\0';
-					UART_SendString("\r\n");
 				}
 				else
 					{;}
@@ -132,7 +130,6 @@ extern uint8_t Terminal_ReceiveUserName(uint8_t * user_name)
 				if(i > 3)
 				{
 					user_name[i] = '\0';
-					UART_SendString("\r\n");
 				}
 				else
 					{;}

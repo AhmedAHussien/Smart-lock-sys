@@ -38,7 +38,7 @@ typedef enum {member = 1, moderator, admin} Rank;
 
 void E2prom_SystemSetup(void);
 uint8_t E2prom_AddUser(uint8_t * user_id, uint8_t * user_name, uint8_t * user_password, Rank rank);
-uint8_t E2prom_RemoveUser(uint8_t * user_id, uint8_t * loggedIn_id);
+uint8_t E2prom_RemoveUser(uint8_t * user_id);
 uint8_t E2prom_ModifyUser(uint8_t * user_id, uint8_t * user_name, uint8_t * user_pw);
 
 uint16_t CheckUserID(uint8_t * user_id);
@@ -48,6 +48,7 @@ extern uint8_t E2prom_GetUserName(uint8_t * user_id, uint8_t * user_name);
 extern uint8_t E2prom_GetUserPassword(uint8_t * user_id, uint8_t * user_pw);
 extern uint8_t E2prom_GetUserRank(uint8_t * user_id, Rank * user_rank);
 extern uint8_t E2prom_GetSystemFactorySetting(void);
+extern uint8_t E2prom_GetUserStatus(uint8_t * user_id, uint8_t * user_status);
 
 /*************** Setters *************/
 extern uint8_t E2prom_SetSystemFactorySetting(uint8_t setting);
@@ -57,7 +58,7 @@ extern uint8_t SetSystemState(uint8_t system_state);
 void E2prom_ListUsers(void);
 uint8_t E2prom_PromoteUser(uint8_t * user_id, Rank user_rank);
 
-uint8_t* E2prom_VerifyUserInfo(uint8_t * user_id, uint8_t * user_pw);
+uint8_t E2prom_VerifyUserInfo(uint8_t * user_id, uint8_t * user_pw);
 Rank E2prom_VerifyAdminInfo(uint8_t * user_id, uint8_t* user_pw);
 
 

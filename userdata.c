@@ -3,7 +3,7 @@
 #include <string.h>
 #include "uart.h"
 
-#define USER_STATE_OFFSET		0
+#define USER_VALID_OFFSET		0
 #define USER_STATUS_OFFSET		1
 #define USER_RANK_OFFSET		2
 #define USER_ID_OFFSET			3
@@ -26,7 +26,7 @@ uint8_t g_admins_number = 0;
 
 
 
-extern void E2prom_SystemSetup(void)
+extern void E2prom_SystemSetup(void)		//check
 {
 
 	if(E2prom_GetSystemFactorySetting() != FACTORY_CONFIGURED)
@@ -49,7 +49,7 @@ extern void E2prom_SystemSetup(void)
 
 }
 
-extern uint8_t E2prom_AddUser(uint8_t * user_id, uint8_t * user_name, uint8_t * user_pw, Rank user_rank)
+extern uint8_t E2prom_AddUser(uint8_t * user_id, uint8_t * user_name, uint8_t * user_pw, Rank user_rank)	//check
 {
 	uint8_t users_number = GetUsersNumber();
 	uint8_t admins_number = GetAdminsNumber();
@@ -148,16 +148,11 @@ extern uint8_t E2prom_AddUser(uint8_t * user_id, uint8_t * user_name, uint8_t * 
 	}
 }
 
-extern uint8_t E2prom_RemoveUser(uint8_t * user_id, uint8_t * loggedIn_id)		//needs attention
+extern uint8_t E2prom_RemoveUser(uint8_t * user_id)		//check
 {
-	if(strcmp(user_id, loggedIn_id) == 0)
-	{
-		return FAIL;
-	}
-	else {;}
 
 	uint16_t target_address = CheckUserID(user_id);
-	if(target_address == 0)
+	if(target_address == NOT_FOUND)
 	{
 		return FAIL;
 	}
@@ -174,7 +169,7 @@ extern uint8_t E2prom_RemoveUser(uint8_t * user_id, uint8_t * loggedIn_id)		//ne
 	return SUCCESS;
 }
 
-extern uint8_t E2prom_ModifyUser(uint8_t * user_id, uint8_t * user_name, uint8_t * user_pw)		//needs attention
+extern uint8_t E2prom_ModifyUser(uint8_t * user_id, uint8_t * user_name, uint8_t * user_pw)		//check
 {
 	uint16_t target_address = CheckUserID(user_id);
 	if(target_address == 0)
@@ -185,7 +180,7 @@ extern uint8_t E2prom_ModifyUser(uint8_t * user_id, uint8_t * user_name, uint8_t
 
 
 	uint8_t user_data[29] = {0}, i = 0;
-	I2C_StartReceive(target_address + 1);
+	I2C_StartReceive(target_address + USER_STATUS_OFFSET);
 	for(i=0; i<29; i++)
 	{
 		user_data[i] = I2C_ReceiveAck();
@@ -197,16 +192,21 @@ extern uint8_t E2prom_ModifyUser(uint8_t * user_id, uint8_t * user_name, uint8_t
 	{
 		for(i=0; i<5; i++)
 		{
-			user_data[i+7] = user_pw[i];
+			user_data[i+USER_PASSWORD_OFFSET-1] = user_pw[i];
 		}
 	}
-	else {;}
+	else if((*user_name) == NULL)
+	{
+		return FAIL;
+	}
+	else
+	{;}
 
 	if((*user_name) != NULL)
 	{
 		for(i=0; i<17; i++)
 		{
-			user_data[i+12] = user_name[i];
+			user_data[i+USER_NAME_OFFSET-1] = user_name[i];
 			if(user_name[i] == '\0')
 				{
 					break;
@@ -218,7 +218,12 @@ extern uint8_t E2prom_ModifyUser(uint8_t * user_id, uint8_t * user_name, uint8_t
 			user_data[i+12] = '\0';
 		}
 	}
-	else {;}
+	else if((*user_pw) == NULL)
+	{
+		return FAIL;
+	}
+	else
+	{;}
 
 	uint16_t checksum = 0;
 	I2C_StartTransmit(target_address);
@@ -239,8 +244,9 @@ extern uint8_t E2prom_ModifyUser(uint8_t * user_id, uint8_t * user_name, uint8_t
 	{
 		checksum += I2C_ReceiveAck();
 	}
-        checksum += I2C_ReceiveAck();
-        checksum += ((uint16_t)I2C_ReceiveAck() << 8);
+
+  checksum += I2C_ReceiveAck();
+  checksum += ((uint16_t)I2C_ReceiveAck() << 8);
 
 	I2C_StopReceive();
 
@@ -269,7 +275,7 @@ extern void E2prom_ListUsers(void)		//Check
 	Rank user_rank;
 	for(i=1; i<=users_number; i++)
 	{
-		I2C_StartReceive(i*(0x020) + USER_STATE_OFFSET);
+		I2C_StartReceive(i*(0x020) + USER_VALID_OFFSET);
 		uint8_t user_state = I2C_ReceiveAck();
 		I2C_StopReceive();
 
@@ -394,7 +400,7 @@ extern Rank E2prom_VerifyAdminInfo(uint8_t * user_id, uint8_t* user_pw)		//needs
 	}
 }
 
-extern uint8_t* E2prom_VerifyUserInfo(uint8_t * user_id, uint8_t * user_pw)		//needs attention
+extern uint8_t E2prom_VerifyUserInfo(uint8_t * user_id, uint8_t * user_pw)		//check
 {
 	uint16_t user_address = CheckUserID(user_id);
 	if(user_address == 0)
@@ -413,26 +419,17 @@ extern uint8_t* E2prom_VerifyUserInfo(uint8_t * user_id, uint8_t * user_pw)		//n
 		else
 		{
 			uint8_t i = 0, user_received_pw[5];
-			I2C_StartReceive(user_address + 8);
+			I2C_StartReceive(user_address + USER_PASSWORD_OFFSET);
+
 			for(i=0; i<5; i++)
 			{
 				user_received_pw[i] = I2C_ReceiveAck();
 			}
 			I2C_StopReceive();
+
 			if(strcmp(user_received_pw, user_pw) == 0)
 			{
-				static uint8_t user_name[17];
-				I2C_StartReceive(user_address+13);
-				for(i=0; i<17; i++)
-				{
-					user_name[i] = I2C_ReceiveAck();
-					if (user_name[i] == '\0')
-					{
-						break;
-					}
-				}
-                                I2C_StopReceive();
-				return user_name;
+				return VALID;
 			}
 			else
 			{
@@ -456,18 +453,21 @@ extern uint8_t E2prom_GetUserName(uint8_t * user_id, uint8_t * user_name)
 	else
 	{
 		uint8_t i = 0;
+
+		I2C_StartReceive(user_address + USER_NAME_OFFSET);
+
 		for(i=0; i<17; i++)
 		{
-			I2C_StartReceive(user_address + USER_NAME_OFFSET);
 			user_name[i] = I2C_ReceiveAck();
 			if(user_name[i] == '\0')
 			{
-				I2C_StopReceive();
 				break;
 			}
 			else
 				{;}
 		}
+
+		I2C_StopReceive();
 
 		return SUCCESS;
 	}
@@ -505,6 +505,23 @@ extern uint8_t E2prom_GetUserRank(uint8_t * user_id, Rank * user_rank)
 	{
 		I2C_StartReceive(user_address + USER_RANK_OFFSET);
 		*user_rank = I2C_ReceiveAck();
+		I2C_StopReceive();
+
+		return SUCCESS;
+	}
+}
+
+extern uint8_t E2prom_GetUserStatus(uint8_t * user_id, uint8_t * user_status)
+{
+	uint16_t user_address = CheckUserID(user_id);
+	if(user_address == NOT_FOUND)
+	{
+		return FAIL;
+	}
+	else
+	{
+		I2C_StartReceive(user_address + USER_STATUS_OFFSET);
+		*user_status = I2C_ReceiveAck();
 		I2C_StopReceive();
 
 		return SUCCESS;
