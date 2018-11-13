@@ -26,14 +26,16 @@ extern void E2prom_SystemSetup(void)		//check
 
 	if(E2prom_GetSystemFactorySetting() != FACTORY_CONFIGURED)
 	{
-		//clear memory to make sure everything will be good
+		//clear memory to make sure everything will be ok
 		FactoryReset();
 		//unlock system by default
-		SetSystemState(UNLOCKED);
+		E2prom_ResetIncorrectPWCounter();
+		E2prom_SetSystemState(UNLOCKED);
 		//set users number to zero
 		SetUsersNumber(0);
 		//set admins number to zero
 		SetAdminsNumber(0);
+
 	}
 	else
 	{
@@ -488,7 +490,26 @@ extern uint8_t E2prom_GetSystemFactorySetting(void)			//check
 	return sys_factory_setting;
 }
 
+extern uint8_t E2prom_GetSystemState(void)
+{
+	uint8_t system_state;
+	I2C_StartReceive(SYSTEM_STATE_ADDRESS);
+	system_state = I2C_ReceiveAck();
+	I2C_StopReceive();
 
+	return system_state;
+}
+
+extern uint8_t E2prom_GetIncorrectPWCounter(void)
+{
+	uint8_t passwordIncorrectCounter;
+
+	I2C_StartReceive(INCORRECT_PW_COUNTER_ADDRESS);
+	passwordIncorrectCounter = I2C_ReceiveAck();
+	I2C_StopReceive();
+
+	return passwordIncorrectCounter;
+}
 
 /********************** Setters *************************/
 
@@ -508,7 +529,7 @@ extern uint8_t E2prom_SetSystemFactorySetting(uint8_t setting)		//check
 
 }
 
-extern uint8_t SetSystemState(uint8_t system_state)		//check
+extern uint8_t E2prom_SetSystemState(uint8_t system_state)		//check
 {
 	if(system_state == UNLOCKED || system_state == LOCKED)
 	{
@@ -523,6 +544,38 @@ extern uint8_t SetSystemState(uint8_t system_state)		//check
 		return FAIL;
 	}
 
+}
+
+extern uint8_t E2prom_IncrementIncorrectPWCounter(void)
+{
+	uint8_t passwordIncorrectCounter;
+
+	I2C_StartReceive(INCORRECT_PW_COUNTER_ADDRESS);
+	passwordIncorrectCounter = I2C_ReceiveAck();
+	I2C_StopReceive();
+
+	if(passwordIncorrectCounter >= MAX_WRONG_ENTRIES)
+	{
+		return FAIL;
+	}
+	else
+	{
+		passwordIncorrectCounter++;
+
+		I2C_StartTransmit(INCORRECT_PW_COUNTER_ADDRESS);
+		I2C_Transmit(passwordIncorrectCounter);
+		I2C_StopTransmit();
+
+		return SUCCESS;
+	}
+
+}
+
+extern void E2prom_ResetIncorrectPWCounter(void)
+{
+	I2C_StartTransmit(INCORRECT_PW_COUNTER_ADDRESS);
+	I2C_Transmit(0);
+	I2C_StopTransmit();
 }
 
 /******************* Static Utils **********************/

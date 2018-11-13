@@ -2390,16 +2390,10 @@
     <name>$PROJ_DIR$\uart.h</name>
   </file>
   <file>
-    <name>$PROJ_DIR$\uart_test.c</name>
-  </file>
-  <file>
     <name>$PROJ_DIR$\userdata.c</name>
   </file>
   <file>
     <name>$PROJ_DIR$\userdata.h</name>
-  </file>
-  <file>
-    <name>$PROJ_DIR$\userdata_test.c</name>
   </file>
   <file>
     <name>$PROJ_DIR$\utils.h</name>

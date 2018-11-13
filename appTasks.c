@@ -12,7 +12,6 @@
 	#include "terminal.h"
 
 
-	static uint8_t passwordIncorrectCounter = 0;
 
 	xQueueHandle LCD_Queue = NULL;
 	xQueueHandle Terminal_Queue = NULL;
@@ -163,6 +162,7 @@
 
 							if(xSemaphoreTake(UartSemaphore, 12000/portTICK_PERIOD_MS) == pdFALSE)
 							{
+								//Semaphore is not taken in this block of code and will exist by the break statement
 								LCD_WriteNewLine("Error: System");
 								LCD_GoTo(0,1);
 								LCD_WriteString("maintenance");
@@ -171,71 +171,75 @@
 								break;
 							}
 							else
-							{;}
-
-							if(E2prom_VerifyUserInfo(user_id, user_password) == VALID)
 							{
-								passwordIncorrectCounter = 0;
-
-								E2prom_GetUserName(user_id, user_name);
-								UART_SendString("\r\n");
-								UART_SendString(user_name);
-								UART_SendString(" has logged in\r\n");
-								xSemaphoreGive(UartSemaphore);
-
-								LCD_WriteNewLine("Welcome");
-								LCD_GoTo(0,1);
-								LCD_WriteString(user_name);
-
-
-								//Green LED on & open door
-								//wait 2 seconds
-								//stop door
-								//wait 2 seconds
-								//close door
-								//wait 2 seconds
-								//Green LED off & stop door
-								//unblock keypad
-
-								vTaskDelay(6000/portTICK_PERIOD_MS);
-
-							}
-							else
-							{
-								passwordIncorrectCounter++;
-								UART_SendString("Wrong entry with ID: ");
-								UART_SendString(user_id);
-								UART_SendString(" - PW: ");
-								UART_SendString(user_password);
-								UART_SendString("\n\r");
-								if(passwordIncorrectCounter == 3)
+								//Semaphore is taken from this point
+								if(E2prom_VerifyUserInfo(user_id, user_password) == VALID)
 								{
-									UART_SendString("3 Wrong Entries, System lock down\n\r");
+									E2prom_ResetIncorrectPWCounter();
+
+									E2prom_GetUserName(user_id, user_name);
+									UART_SendString("\r\n");
+									UART_SendString(user_name);
+									UART_SendString(" has logged in\r\n");
+									xSemaphoreGive(UartSemaphore);
+
+									LCD_WriteNewLine("Welcome");
+									LCD_GoTo(0,1);
+									LCD_WriteString(user_name);
+
+									//Green LED on & open door
+									//wait 2 seconds
+									//stop door
+									//wait 2 seconds
+									//close door
+									//wait 2 seconds
+									//Green LED off & stop door
+
+									vTaskDelay(6000/portTICK_PERIOD_MS);
 								}
 								else
-								{;}
-								xSemaphoreGive(UartSemaphore);
-
-								if(passwordIncorrectCounter == 3)
 								{
-									LCD_WriteNewLine("Access Denied");
-									while(passwordIncorrectCounter == 3)
+									E2prom_IncrementIncorrectPWCounter();			//semaphore is taken
+									UART_SendString("Wrong entry with ID: ");
+									UART_SendString(user_id);
+									UART_SendString(" - PW: ");
+									UART_SendString(user_password);
+									UART_SendString("\n\r");
+									if(E2prom_GetIncorrectPWCounter() >= 3)
 									{
-										vTaskDelay(500/portTICK_PERIOD_MS);
-										LCD_WriteCommand(LCD_DISPLAY_OFF);
-										vTaskDelay(500/portTICK_PERIOD_MS);
-										LCD_WriteCommand(LCD_DISPLAY_ON);
+										E2prom_SetSystemState(LOCKED);
+										UART_SendString("3 Wrong Entries, System lock down\n\r");
 									}
-								}
-								else
-								{
-									LCD_WriteNewLine("Wrong Entires: ");
-									LCD_WriteChar(passwordIncorrectCounter + 0x30);
-									vTaskDelay(3000/portTICK_PERIOD_MS);
+									else
+									{;}
+
+									if(E2prom_GetSystemState() == LOCKED)
+									{
+										LCD_WriteNewLine("Access Denied");
+										while(E2prom_GetSystemState() == LOCKED)
+										{
+											xSemaphoreGive(UartSemaphore);
+											vTaskDelay(500/portTICK_PERIOD_MS);
+											LCD_WriteCommand(LCD_DISPLAY_OFF);
+											vTaskDelay(500/portTICK_PERIOD_MS);
+											LCD_WriteCommand(LCD_DISPLAY_ON);
+											xSemaphoreTake(UartSemaphore, portMAX_DELAY);
+										}
+										xSemaphoreGive(UartSemaphore);
+									}
+									else
+									{
+										LCD_WriteNewLine("Wrong Entires: ");
+										LCD_WriteChar(E2prom_GetIncorrectPWCounter() + 0x30);
+										xSemaphoreGive(UartSemaphore);
+										vTaskDelay(3000/portTICK_PERIOD_MS);
+									}
+
 								}
 
 							}
 							vTaskResume(keypadHandle);
+
 						}
 						else
 						{;}
@@ -452,6 +456,8 @@
 				switch(terminalInput)
 				{
 					case '1':
+					E2prom_ResetIncorrectPWCounter();
+					E2prom_SetSystemState(UNLOCKED);
 					UART_SendString("\r\nSystem unlocked\r\n");
 					//System unlock function
 
