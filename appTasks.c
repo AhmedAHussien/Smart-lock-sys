@@ -176,68 +176,68 @@
 							{
 								passwordIncorrectCounter = 0;
 
-									E2prom_GetUserName(user_id, user_name);
-									UART_SendString("\r\n");
-									UART_SendString(user_name);
-									UART_SendString(" has logged in\r\n");
-									xSemaphoreGive(UartSemaphore);
+								E2prom_GetUserName(user_id, user_name);
+								UART_SendString("\r\n");
+								UART_SendString(user_name);
+								UART_SendString(" has logged in\r\n");
+								xSemaphoreGive(UartSemaphore);
 
-									LCD_WriteNewLine("Welcome");
-									LCD_GoTo(0,1);
-									LCD_WriteString(user_name);
+								LCD_WriteNewLine("Welcome");
+								LCD_GoTo(0,1);
+								LCD_WriteString(user_name);
 
 
-									//Green LED on & open door
-									//wait 2 seconds
-									//stop door
-									//wait 2 seconds
-									//close door
-									//wait 2 seconds
-									//Green LED off & stop door
-									//unblock keypad
+								//Green LED on & open door
+								//wait 2 seconds
+								//stop door
+								//wait 2 seconds
+								//close door
+								//wait 2 seconds
+								//Green LED off & stop door
+								//unblock keypad
 
-									vTaskDelay(6000/portTICK_PERIOD_MS);
+								vTaskDelay(6000/portTICK_PERIOD_MS);
 
 							}
 							else
 							{
-									passwordIncorrectCounter++;
-									UART_SendString("Wrong entry with ID: ");
-									UART_SendString(user_id);
-									UART_SendString(" - PW: ");
-									UART_SendString(user_password);
-									UART_SendString("\n\r");
-									if(passwordIncorrectCounter == 3)
-									{
-										UART_SendString("3 Wrong Entries, System lock down\n\r");
-									}
-									else
-									{;}
-									xSemaphoreGive(UartSemaphore);
+								passwordIncorrectCounter++;
+								UART_SendString("Wrong entry with ID: ");
+								UART_SendString(user_id);
+								UART_SendString(" - PW: ");
+								UART_SendString(user_password);
+								UART_SendString("\n\r");
+								if(passwordIncorrectCounter == 3)
+								{
+									UART_SendString("3 Wrong Entries, System lock down\n\r");
+								}
+								else
+								{;}
+								xSemaphoreGive(UartSemaphore);
 
-									if(passwordIncorrectCounter == 3)
+								if(passwordIncorrectCounter == 3)
+								{
+									LCD_WriteNewLine("Access Denied");
+									while(passwordIncorrectCounter == 3)
 									{
-										LCD_WriteNewLine("Access Denied");
-										while(passwordIncorrectCounter == 3)
-										{
-											vTaskDelay(500/portTICK_PERIOD_MS);
-											LCD_WriteCommand(LCD_DISPLAY_OFF);
-											vTaskDelay(500/portTICK_PERIOD_MS);
-											LCD_WriteCommand(LCD_DISPLAY_ON);
-										}
+										vTaskDelay(500/portTICK_PERIOD_MS);
+										LCD_WriteCommand(LCD_DISPLAY_OFF);
+										vTaskDelay(500/portTICK_PERIOD_MS);
+										LCD_WriteCommand(LCD_DISPLAY_ON);
 									}
-									else
-									{
-										LCD_WriteNewLine("Wrong Entires: ");
-										LCD_WriteChar(passwordIncorrectCounter + 0x30);
-										vTaskDelay(3000/portTICK_PERIOD_MS);
-									}
+								}
+								else
+								{
+									LCD_WriteNewLine("Wrong Entires: ");
+									LCD_WriteChar(passwordIncorrectCounter + 0x30);
+									vTaskDelay(3000/portTICK_PERIOD_MS);
+								}
 
 							}
 							vTaskResume(keypadHandle);
 						}
 						else
-							{;}
+						{;}
 						break;
 
 						default:
@@ -435,7 +435,7 @@
 
 						case member:
 						Terminal_CurrentState = Idle;
-						UART_SendString("\r\nNot authorized\r\n");
+						UART_SendString("\r\nUnauthorized\r\n");
 						break;
 					}
 				}
@@ -491,10 +491,19 @@
 						else
 						{;}
 
-						loggedInRank = E2prom_VerifyAdminInfo(adminID, adminPassword);
-						if(loggedInRank == admin)
+						E2prom_GetUserRank(adminID, &loggedInRank);
+						if(E2prom_VerifyUserInfo(adminID, adminPassword) == VALID)
 						{
-							Terminal_CurrentState = UsersMenu;
+							E2prom_GetUserRank(adminID, &loggedInRank);
+							if(loggedInRank == admin)
+							{
+								UART_SendString("\r\nUsers menu access granted\r\n");
+								Terminal_CurrentState = UsersMenu;
+							}
+							else
+							{
+								UART_SendString("\r\nUnauthorized\r\n");
+							}
 							//UART_SendString("\r\n1.Add User\r\n2.Modify User\r\n3.Remove User\r\n4.List Users\r\n4.Return to the previous menu\r\n");
 						}
 						else

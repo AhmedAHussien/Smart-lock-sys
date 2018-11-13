@@ -43,7 +43,7 @@ LMI_LeaveTargetRunning=0x00000000
 LMIFTDIserialNo=0E2252BA
 LMIFTDIfoundProbes=
 [DebugChecksum]
-Checksum=-898806160
+Checksum=1545508873
 [Exceptions]
 StopOnUncaught=_ 0
 StopOnThrow=_ 0
@@ -71,8 +71,7 @@ Bp11=_ "STD_CODE" "{$PROJ_DIR$\userdata_test.c}.66.1" 0 0 0 0 "" 0 ""
 Bp12=_ "STD_CODE" "{$PROJ_DIR$\userdata_test.c}.26.6" 0 0 0 0 "" 0 ""
 Bp13=_ "STD_CODE" "{$PROJ_DIR$\appTasks.c}.467.6" 0 0 0 0 "" 0 ""
 Bp14=_ "STD_CODE" "{$PROJ_DIR$\main.c}.127.3" 1 0 0 0 "" 0 ""
-Bp15=_ "STD_CODE" "{$PROJ_DIR$\appTasks.c}.63.3" 1 0 0 0 "" 0 ""
-Count=16
+Count=15
 [Log file]
 LoggingEnabled=_ 0
 LogFile=_ ""

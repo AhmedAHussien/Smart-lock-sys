@@ -352,53 +352,7 @@ extern void E2prom_ListUsers(void)		//Check
 	}
 }
 
-extern Rank E2prom_VerifyAdminInfo(uint8_t * user_id, uint8_t* user_pw)		//needs attention
-{
-	uint16_t user_address = CheckUserID(user_id);
-	Rank user_rank;
-	if(user_address == 0)
-	{
-		return FAIL;
-	}
-	else
-	{
-		I2C_StartReceive(user_address);
-		uint8_t user_state = I2C_ReceiveAck();
-		I2C_StopReceive();
-		if(user_state != VALID)
-		{
-			return FAIL;
-		}
-		else
-		{
-			I2C_StartReceive(user_address + 2);
-			user_rank = I2C_ReceiveAck();
-			I2C_StopReceive();
-			if(user_rank == member)
-			{
-				return FAIL;
-			}
-			else
-				{;}
-		}
-	}
 
-	uint8_t i = 0, user_received_pw[5];
-	I2C_StartReceive(user_address + 8);
-	for(i=0; i<5; i++)
-	{
-		user_received_pw[i] = I2C_ReceiveAck();
-	}
-	I2C_StopReceive();
-	if(strcmp(user_received_pw, user_pw) == 0)
-	{
-		return user_rank;
-	}
-	else
-	{
-		return FAIL;
-	}
-}
 
 extern uint8_t E2prom_VerifyUserInfo(uint8_t * user_id, uint8_t * user_pw)		//check
 {

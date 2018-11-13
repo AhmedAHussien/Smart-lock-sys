@@ -59,7 +59,6 @@ void E2prom_ListUsers(void);
 uint8_t E2prom_PromoteUser(uint8_t * user_id, Rank user_rank);
 
 uint8_t E2prom_VerifyUserInfo(uint8_t * user_id, uint8_t * user_pw);
-Rank E2prom_VerifyAdminInfo(uint8_t * user_id, uint8_t* user_pw);
 
 
 #endif
