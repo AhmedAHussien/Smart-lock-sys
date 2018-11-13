@@ -166,6 +166,7 @@
 								LCD_WriteNewLine("Error: System");
 								LCD_GoTo(0,1);
 								LCD_WriteString("maintenance");
+								vTaskResume(keypadHandle);
 								//vTaskDelay(3000/portTICK_PERIOD_MS);
 								break;
 							}
