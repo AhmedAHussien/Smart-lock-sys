@@ -21,11 +21,6 @@ static uint8_t RelocateUser(uint16_t source, uint16_t destination);
 static uint16_t CheckUserID(uint8_t * user_id);
 
 
-uint8_t g_users_number = 0;
-uint8_t g_admins_number = 0;
-
-
-
 extern void E2prom_SystemSetup(void)		//check
 {
 
@@ -598,7 +593,7 @@ static void FactoryReset(void)		//check
   }
 }
 
-extern uint16_t CheckUserID(uint8_t * user_id)		//check
+static uint16_t CheckUserID(uint8_t * user_id)		//check
 {
 
 	uint8_t users_number = GetUsersNumber();
