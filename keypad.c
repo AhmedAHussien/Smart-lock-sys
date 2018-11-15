@@ -3,7 +3,7 @@
  *
  * Created: 3/29/2018 8:24:11 PM
  *  Author: Peter
- */ 
+ */
 #include "keypad_config.h"
 #include "utils.h"
 #include "keypad.h"
@@ -35,7 +35,7 @@ void Keypad_Init (void)
   COL1_PORT->DEN |= (1U<<COL1);
   COL2_PORT->DEN |= (1U<<COL2);
   COL3_PORT->DEN |= (1U<<COL3);
-  
+
 	// set row direction as output
   ROW0_PORT->DIR |= (1U<<ROW0);
   ROW1_PORT->DIR |= (1U<<ROW1);
@@ -57,37 +57,37 @@ void Keypad_Init (void)
   ROW1_PORT->DATA_BITS[1U<<ROW1] |= (1U<<ROW1);
   ROW2_PORT->DATA_BITS[1U<<ROW2] |= (1U<<ROW2);
   ROW3_PORT->DATA_BITS[1U<<ROW3] |= (1U<<ROW3);
-	
+
 }
 
 unsigned char Keypad_ReadChar (void)
 {
 	static unsigned char gKeyMap [4][4]={
-          {'1','2','3','A'},	
+          {'1','2','3','A'},
           {'4','5','6','B'},
           {'7','8','9','C'},
           {'*','0','#','D'}};
-        
+
 	uint8_t row, col=NOTPRESSED, result=NOTPRESSED;
 	//loop on row
 	for (row=0;row<4;row++)
-	{	
-		
+	{
+
 	// set the no output state for row output
           ROW0_PORT->DATA_BITS[1U<<ROW0] |= (1U<<ROW0);
           ROW1_PORT->DATA_BITS[1U<<ROW1] |= (1U<<ROW1);
           ROW2_PORT->DATA_BITS[1U<<ROW2] |= (1U<<ROW2);
           ROW3_PORT->DATA_BITS[1U<<ROW3] |= (1U<<ROW3);
 	// set the output for selected pin
-		
+
           switch (row)
           {
             case 0: ROW0_PORT->DATA_BITS[1U<<ROW0] &=~ (1U<<ROW0);  break;
             case 1: ROW1_PORT->DATA_BITS[1U<<ROW1] &=~ (1U<<ROW1);  break;
             case 2: ROW2_PORT->DATA_BITS[1U<<ROW2] &=~ (1U<<ROW2);  break;
             case 3: ROW3_PORT->DATA_BITS[1U<<ROW3] &=~ (1U<<ROW3);  break;
-            default: 
-              break;        /*MISRA*/		
+            default:
+              break;        /*MISRA*/
             }
             //check if there valid input
 		if (GET_BIT(COL0_PORT->DATA_BITS[(1U<<COL0)],COL0)==INPUT_COL)
@@ -99,10 +99,13 @@ unsigned char Keypad_ReadChar (void)
 		else if (GET_BIT(COL3_PORT->DATA_BITS[(1U<<COL3)],COL3)==INPUT_COL)
                   col = 3;
 		else ;/*MISRA*/
-                
+
             if (CHECK_COL_INPUT)
-		result = gKeyMap [row][col];
-			
+            {
+              result = gKeyMap [row][col];
+
+            }
+			         else{;}
 		//end for
 	}
 	// return mapped key

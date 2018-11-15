@@ -46,7 +46,7 @@ int main()
   GPIOF->DIR |= (1U<<4) | (1U<<3) | (1U<<2);
   GPIOF->DATA_BITS[1U<<4 | (1U<<3) | (1U<<2)] = (1U<<4) | (1U<<3) | (1U<<2);
 
-  SYSCTL->RCGCGPIO |= (1U<<0);
+  SYSCTL->RCGCGPIO |= (1U<<0);  //portA pin 0 [Buzzer]
   GPIOA->DEN |= (1U<<5);
   GPIOA->DIR |= (1U<<5);
 
@@ -60,7 +60,11 @@ int main()
   I2C_Init();                    //initialize i2c
   UART_Init();
 
+  SYSCTL->RCGCGPIO |= (1U<<1);
+  GPIOB->DEN |= (1U<<1) | (1U<<0);
+  GPIOB->DIR |= (1U<<1) | (1U<<0);
 
+  GPIOB->DATA_BITS[(1U<<1) | (1U<<0)] = (1U<<1) | (1U<<0);
 
 #ifdef DEBUG
   if(E2prom_SystemSetup() == FAIL)

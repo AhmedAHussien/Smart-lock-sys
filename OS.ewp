@@ -1921,6 +1921,15 @@
     </settings>
   </configuration>
   <file>
+    <name>$PROJ_DIR$\alarm.c</name>
+  </file>
+  <file>
+    <name>$PROJ_DIR$\alarm.h</name>
+  </file>
+  <file>
+    <name>$PROJ_DIR$\alarm_config.h</name>
+  </file>
+  <file>
     <name>$PROJ_DIR$\appTasks.c</name>
   </file>
   <file>
@@ -1964,6 +1973,15 @@
   </file>
   <file>
     <name>$PROJ_DIR$\main.c</name>
+  </file>
+  <file>
+    <name>$PROJ_DIR$\motor.c</name>
+  </file>
+  <file>
+    <name>$PROJ_DIR$\motor.h</name>
+  </file>
+  <file>
+    <name>$PROJ_DIR$\motor_config.h</name>
   </file>
   <file>
     <name>$PROJ_DIR$\port.c</name>

@@ -1,8 +1,9 @@
+	#include "freeRTOS.h"
 	#include "appTasks.h"
 	#include "keypad.h"
 	#include "LCD.h"
 	#include "userdata.h"
-	#include "freeRTOS.h"
+	#include "timers.h"
 	#include "task.h"
 	#include "queue.h"
 	#include "semphr.h"
@@ -10,6 +11,8 @@
 	#include <string.h>
 	#include "TM4C123GH6PM.h"
 	#include "terminal.h"
+	#include "alarm.h"
+	#include "motor.h"
 
 
 
@@ -19,6 +22,7 @@
 	extern TaskHandle_t keypadHandle;
 	extern TaskHandle_t lcdHandle;
 	extern TaskHandle_t terminalHandle;
+
 
 
 
@@ -43,8 +47,10 @@
 
 	void vTask_LCD(void * args)
 	{
-
+		xSemaphoreGive(UartSemaphore);
 		LCD_Init();
+		Alarm_Init();
+		Motor_Init();
 
 		if(E2prom_GetSystemFactorySetting() == FACTORY_FIRST_TIME_USE)
 		{
@@ -61,6 +67,33 @@
 
 		vTaskResume(terminalHandle);
 
+		if(E2prom_GetSystemState() == LOCKED)
+		{
+			vTaskSuspend(keypadHandle);
+			LCD_WriteNewLine("Access Denied");
+			Alarm_BuzzerOn();
+			Alarm_RedLedOn();
+			while(E2prom_GetSystemState() == LOCKED)
+			{
+				xSemaphoreGive(UartSemaphore);
+				vTaskDelay(700/portTICK_PERIOD_MS);
+				Alarm_BuzzerOff();
+				Alarm_RedLedOff();
+				LCD_WriteCommand(LCD_DISPLAY_OFF);
+				vTaskDelay(400/portTICK_PERIOD_MS);
+				Alarm_BuzzerOn();
+				Alarm_RedLedOn();
+				LCD_WriteCommand(LCD_DISPLAY_ON);
+				xSemaphoreTake(UartSemaphore, portMAX_DELAY);
+			}
+			Alarm_BuzzerOff();
+			Alarm_RedLedOff();
+			vTaskResume(keypadHandle);
+
+		}
+		else{;}
+
+
 		uint8_t KeypadKey = 0;
 		uint8_t user_id[5];
 		uint8_t user_password[5];
@@ -69,10 +102,13 @@
 		BaseType_t queueState = pdFALSE;
 		LCD_State_t LCD_CurrentState = Welcome;
 
+		TickType_t initialTickCount;
+		TickType_t terminalTickCount;
+
 		LCD_Init();
 		LCD_WriteNewLine("Welcome");
 
-		xSemaphoreGive(UartSemaphore);
+
 
 		while(1)
 		{
@@ -102,7 +138,23 @@
 							LCD_WriteCommand(LCD_CURSOR_SHIFT_LEFT);
 							LCD_WriteChar(' ');
 							LCD_WriteCommand(LCD_CURSOR_SHIFT_LEFT);
-							//user_id[i] = '\0';
+							if(i > 0)
+							{
+								initialTickCount = xTaskGetTickCount();
+								while(Keypad_ReadChar() == 'C')
+								{
+									terminalTickCount = xTaskGetTickCount() - initialTickCount;
+									if((terminalTickCount*portTICK_PERIOD_MS) >= 1000)
+									{
+										LCD_GoTo(0,1);
+										LCD_WriteString("    ");
+										LCD_GoTo(0,1);
+										i=0;
+										break;
+									}else{;}
+								}
+
+							}else{;}
 						}
 						break;
 
@@ -138,7 +190,23 @@
 							LCD_WriteCommand(LCD_CURSOR_SHIFT_LEFT);
 							LCD_WriteChar(' ');
 							LCD_WriteCommand(LCD_CURSOR_SHIFT_LEFT);
-							//user_password[i] = '\0';
+							if(i > 0)
+							{
+								initialTickCount = xTaskGetTickCount();
+								while(Keypad_ReadChar() == 'C')
+								{
+									terminalTickCount = xTaskGetTickCount() - initialTickCount;
+									if((terminalTickCount*portTICK_PERIOD_MS) >= 1000)
+									{
+										LCD_GoTo(0,1);
+										LCD_WriteString("    ");
+										LCD_GoTo(0,1);
+										i=0;
+										break;
+									}else{;}
+								}
+
+							}else{;}
 						}
 						else
 						{;}
@@ -188,14 +256,22 @@
 									LCD_WriteString(user_name);
 
 									//Green LED on & open door
-									//wait 2 seconds
+									Alarm_GreenLedOn();
+									Motor_RunForward();
+									//wait 1 second
+									vTaskDelay(1000/portTICK_PERIOD_MS);
 									//stop door
-									//wait 2 seconds
+									Motor_Stop();
+									//wait 3 seconds
+									vTaskDelay(3000/portTICK_PERIOD_MS);
 									//close door
-									//wait 2 seconds
+									Motor_RunReverse();
+									//wait 1 second
+									vTaskDelay(1000/portTICK_PERIOD_MS);
 									//Green LED off & stop door
+									Motor_Stop();
+									Alarm_GreenLedOff();
 
-									vTaskDelay(6000/portTICK_PERIOD_MS);
 								}
 								else
 								{
@@ -216,16 +292,25 @@
 									if(E2prom_GetSystemState() == LOCKED)
 									{
 										LCD_WriteNewLine("Access Denied");
+										Alarm_BuzzerOn();
+										Alarm_RedLedOn();
 										while(E2prom_GetSystemState() == LOCKED)
 										{
 											xSemaphoreGive(UartSemaphore);
-											vTaskDelay(500/portTICK_PERIOD_MS);
+											vTaskDelay(700/portTICK_PERIOD_MS);
+											Alarm_BuzzerOff();
+											Alarm_RedLedOff();
 											LCD_WriteCommand(LCD_DISPLAY_OFF);
-											vTaskDelay(500/portTICK_PERIOD_MS);
+											vTaskDelay(400/portTICK_PERIOD_MS);
+											Alarm_BuzzerOn();
+											Alarm_RedLedOn();
 											LCD_WriteCommand(LCD_DISPLAY_ON);
 											xSemaphoreTake(UartSemaphore, portMAX_DELAY);
 										}
 										xSemaphoreGive(UartSemaphore);
+										Alarm_BuzzerOff();
+										Alarm_RedLedOff();
+										LCD_WriteNewLine("Welcome");
 									}
 									else
 									{

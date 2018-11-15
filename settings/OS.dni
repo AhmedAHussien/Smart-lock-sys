@@ -43,7 +43,7 @@ LMI_LeaveTargetRunning=0x00000000
 LMIFTDIserialNo=0E2252BA
 LMIFTDIfoundProbes=
 [DebugChecksum]
-Checksum=-428998169
+Checksum=1103468521
 [Exceptions]
 StopOnUncaught=_ 0
 StopOnThrow=_ 0
@@ -58,24 +58,27 @@ mode=0
 [Breakpoints]
 Bp0=_ "STD_CODE" "{$PROJ_DIR$\i2c_test.c}.61.2" 0 0 0 0 "" 0 ""
 Bp1=_ "STD_CODE" "{$PROJ_DIR$\Debug\Exe}.233.2" 0 0 0 0 "" 0 ""
-Bp2=_ "STD_CODE" "{$PROJ_DIR$\userdata.c}.279.4" 0 0 0 0 "" 0 ""
-Bp3=_ "STD_CODE" "{$PROJ_DIR$\userdata.c}.279.4" 0 0 0 0 "" 0 ""
-Bp4=_ "STD_CODE" "{$PROJ_DIR$\userdata.c}.279.4" 0 0 0 0 "" 0 ""
-Bp5=_ "STD_CODE" "{$PROJ_DIR$\userdata.c}.279.4" 0 0 0 0 "" 0 ""
-Bp6=_ "STD_CODE" "{$PROJ_DIR$\userdata.c}.279.4" 0 0 0 0 "" 0 ""
-Bp7=_ "STD_CODE" "{$PROJ_DIR$\userdata.c}.279.4" 0 0 0 0 "" 0 ""
-Bp8=_ "STD_CODE" "{$PROJ_DIR$\userdata.c}.279.4" 0 0 0 0 "" 0 ""
-Bp9=_ "STD_CODE" "{$PROJ_DIR$\userdata.c}.279.4" 0 0 0 0 "" 0 ""
+Bp2=_ "STD_CODE" "{$PROJ_DIR$\userdata.c}.279.3" 0 0 0 0 "" 0 ""
+Bp3=_ "STD_CODE" "{$PROJ_DIR$\userdata.c}.279.3" 0 0 0 0 "" 0 ""
+Bp4=_ "STD_CODE" "{$PROJ_DIR$\userdata.c}.279.3" 0 0 0 0 "" 0 ""
+Bp5=_ "STD_CODE" "{$PROJ_DIR$\userdata.c}.279.3" 0 0 0 0 "" 0 ""
+Bp6=_ "STD_CODE" "{$PROJ_DIR$\userdata.c}.279.3" 0 0 0 0 "" 0 ""
+Bp7=_ "STD_CODE" "{$PROJ_DIR$\userdata.c}.279.3" 0 0 0 0 "" 0 ""
+Bp8=_ "STD_CODE" "{$PROJ_DIR$\userdata.c}.279.3" 0 0 0 0 "" 0 ""
+Bp9=_ "STD_CODE" "{$PROJ_DIR$\userdata.c}.279.3" 0 0 0 0 "" 0 ""
 Bp10=_ "STD_CODE" "{$PROJ_DIR$\userdata_test.c}.68.5" 0 0 0 0 "" 0 ""
 Bp11=_ "STD_CODE" "{$PROJ_DIR$\userdata_test.c}.66.1" 0 0 0 0 "" 0 ""
 Bp12=_ "STD_CODE" "{$PROJ_DIR$\userdata_test.c}.26.6" 0 0 0 0 "" 0 ""
-Bp13=_ "STD_CODE" "{$PROJ_DIR$\appTasks.c}.469.6" 0 0 0 0 "" 0 ""
-Bp14=_ "STD_CODE" "{$PROJ_DIR$\main.c}.127.3" 1 0 0 0 "" 0 ""
+Bp13=_ "STD_CODE" "{$PROJ_DIR$\appTasks.c}.474.5" 0 0 0 0 "" 0 ""
+Bp14=_ "STD_CODE" "{$PROJ_DIR$\main.c}.131.3" 1 0 0 0 "" 0 ""
 Count=15
 [Log file]
 LoggingEnabled=_ 0
 LogFile=_ ""
 Category=_ 0
+[TermIOLog]
+LoggingEnabled=_ 0
+LogFile=_ ""
 [Aliases]
 A0=_ "C:\Users\Inspiron-15\Desktop\Project\RTOS\main.c" ""
 A1=_ "C:\Users\Inspiron-15\Desktop\Project\RTOS\tasks.c" ""
@@ -86,6 +89,3 @@ A5=_ "D:\embedded sys\Workspaces\ARM Cortex M-4\RTOS\portasm.s" ""
 A6=_ "D:\embedded sys\Workspaces\ARM Cortex M-4\RTOS\tasks.c" ""
 Count=7
 SuppressDialog=0
-[TermIOLog]
-LoggingEnabled=_ 0
-LogFile=_ ""
