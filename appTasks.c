@@ -337,6 +337,20 @@
 
 									if(E2prom_GetSystemState() == LOCKED)
 									{
+
+
+										if(E2prom_GetGateState() != CLOSED)
+										{
+											Motor_RunReverse();
+											vTaskDelay(1000/portTICK_PERIOD_MS);
+											Motor_Stop();
+											E2prom_SetGateState(CLOSED);
+										}
+										else
+										{;}
+
+
+
 										LCD_WriteNewLine("Access Denied");
 										Alarm_BuzzerOn();
 										Alarm_RedLedOn();
@@ -617,9 +631,13 @@
 						break;
 						case '2':
 						xSemaphoreTake(UartSemaphore, portMAX_DELAY);
+						if(E2prom_GetSystemState() == LOCKED)
+						{
+							UART_SendString("\r\nError: Cannot override gate while system is locked\r\n")
+						}
 						if(E2prom_GetGateState() == OVERRIDEN)
 						{
-							UART_SendString("\r\nError: Gate is already overriden");
+							UART_SendString("\r\nError: Gate is already overriden\r\n");
 						}
 						else
 						{

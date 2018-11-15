@@ -36,9 +36,9 @@
 #define DEFAULT_ADMIN_ID		          "1234"
 #define DEFAULT_ADMIN_PW		          "0000"
 
-#define MAX_NUMBER_OF_ADMINS          3
+#define MAX_NUMBER_OF_ADMINS          2
 #define MAX_NUMBER_OF_USERS           127
-#define MAX_WRONG_ENTRIES             4
+#define MAX_WRONG_ENTRIES             3
 
 
 typedef enum {member = 1, moderator, admin} Rank;
