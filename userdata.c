@@ -30,7 +30,7 @@ extern void E2prom_SystemSetup(void)		//check
 		FactoryReset();
 		//unlock system by default
 		E2prom_ResetIncorrectPWCounter();
-		E2prom_SetSystemState(UNLOCKED);
+
 		//set users number to zero
 		SetUsersNumber(0);
 		//set admins number to zero
@@ -43,6 +43,9 @@ extern void E2prom_SystemSetup(void)		//check
 		//operations on the i2cE2prom
 		SystemDataSort();
 	}
+
+	E2prom_SetSystemState(UNLOCKED);
+
 
 }
 
@@ -166,7 +169,7 @@ extern uint8_t E2prom_RemoveUser(uint8_t * user_id)		//check
 	return SUCCESS;
 }
 
-extern uint8_t E2prom_ModifyUser(uint8_t * user_id, uint8_t * user_name, uint8_t * user_pw)		//check
+extern uint8_t E2prom_ModifyUser(uint8_t * user_id, uint8_t * user_name, uint8_t * user_pw, Rank user_rank)		//check
 {
 	uint16_t target_address = CheckUserID(user_id);
 	if(target_address == 0)
@@ -192,10 +195,6 @@ extern uint8_t E2prom_ModifyUser(uint8_t * user_id, uint8_t * user_name, uint8_t
 			user_data[i+USER_PASSWORD_OFFSET-1] = user_pw[i];
 		}
 	}
-	else if((*user_name) == NULL)
-	{
-		return FAIL;
-	}
 	else
 	{;}
 
@@ -215,9 +214,12 @@ extern uint8_t E2prom_ModifyUser(uint8_t * user_id, uint8_t * user_name, uint8_t
 			user_data[i+12] = '\0';
 		}
 	}
-	else if((*user_pw) == NULL)
+	else
+	{;}
+
+	if(user_rank != NULL)
 	{
-		return FAIL;
+		user_data[USER_RANK_OFFSET-1] = user_rank;
 	}
 	else
 	{;}
@@ -324,7 +326,7 @@ extern void E2prom_ListUsers(void)		//Check
 
 			UART_SendString(". ");
 			UART_SendString(user_name);
-			UART_SendChar('\t');
+			UART_SendString("\r\n\t");
 			UART_SendString(user_id);
 			UART_SendChar('\t');
 			switch(user_rank)
@@ -511,6 +513,15 @@ extern uint8_t E2prom_GetIncorrectPWCounter(void)
 	return passwordIncorrectCounter;
 }
 
+extern uint8_t E2prom_GetGateState(void)
+{
+	uint8_t door_state;
+	I2C_StartReceive(GATE_STATE_ADDRESS);
+	door_state = I2C_ReceiveAck();
+	I2C_StopReceive();
+	return door_state;
+}
+
 /********************** Setters *************************/
 
 extern uint8_t E2prom_SetSystemFactorySetting(uint8_t setting)		//check
@@ -575,6 +586,13 @@ extern void E2prom_ResetIncorrectPWCounter(void)
 {
 	I2C_StartTransmit(INCORRECT_PW_COUNTER_ADDRESS);
 	I2C_Transmit(0);
+	I2C_StopTransmit();
+}
+
+extern void E2prom_SetGateState(uint8_t door_state)
+{
+	I2C_StartTransmit(GATE_STATE_ADDRESS);
+	I2C_Transmit(door_state);
 	I2C_StopTransmit();
 }
 
